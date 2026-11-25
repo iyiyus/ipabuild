@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 from collections.abc import Iterator
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from zipfile import ZipFile
 
 from native_ssh import SSHDevice
@@ -253,7 +253,8 @@ def trigger_app(
         path for path in listing.split(b"\0") if path and not path.endswith(b".v4.sinf")
     ):
         path = raw_path.decode("utf-8", "surrogateescape")
-        bundle = Path(path).parent.parent
+        # 远程设备始终是 POSIX 路径；Windows 上 Path() 会把它转成反斜杠
+        bundle = PurePosixPath(path).parent.parent
         if bundle.suffix != ".app":
             continue
         try:
@@ -301,7 +302,7 @@ def fairplayd_process(device: SSHDevice) -> tuple[int, str]:
         if (
             len(fields) == 2
             and fields[0].isdigit()
-            and Path(fields[1]).name.split(".", 1)[0] == "fairplayd"
+            and PurePosixPath(fields[1]).name.split(".", 1)[0] == "fairplayd"
         ):
             processes.append((int(fields[0]), fields[1]))
     if len(processes) != 1:
@@ -316,7 +317,7 @@ def fairplayd_pid(device: SSHDevice) -> int:
 def fairplayd_image(device: SSHDevice) -> bytes:
     path = fairplayd_process(device)[1]
     if not path.startswith("/"):
-        path = "/usr/sbin/" + Path(path).name
+        path = "/usr/sbin/" + PurePosixPath(path).name
     return device.read(path)
 
 
@@ -474,14 +475,14 @@ def main() -> None:
         arcade = sinf_field(selected_sinf, b"key ")[0] == 4
         daemon_image = fairplayd_image(device) if arcade else None
         license_path = device.write("license.sinf", selected_sinf)
-        installed_executable = str(Path(installed_app) / executable)
+        installed_executable = str(PurePosixPath(installed_app) / executable)
         stop_remote(device, installed_executable)
         trigger_dir = device.trigger_directory
         device.run(
             "cp -R " + shlex.quote(installed_app) + " " + shlex.quote(trigger_dir)
         )
         unique_executable = str(
-            Path(trigger_dir) / Path(installed_app).name / executable
+            PurePosixPath(trigger_dir) / PurePosixPath(installed_app).name / executable
         )
         uid_layer_path = device.path("uid-layer.bin")
         credential_path = device.path("credential.bin")
