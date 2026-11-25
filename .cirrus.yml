@@ -1,0 +1,22 @@
+# ============================================================================
+# Cirrus CI —— GitHub Actions 的 macOS runner 被账号 billing 限制挡住时的备选
+# ----------------------------------------------------------------------------
+# Cirrus CI 对 public 仓库提供免费 macOS 实例（无需 GitHub 绑定付款方式）。
+# 用法：
+#   1. 打开 https://cirrus-ci.com 用 GitHub 账号登录并授权
+#   2. 在仓库列表里启用 iyiyus/ipabuild
+#   3. push 本文件后自动构建；构建页 Artifacts 下载 build/bundle 内容
+# 镜像自带完整 Xcode（含 iphoneos SDK），make 的产物与本地一致。
+# ============================================================================
+
+macos_instance:
+  image: ghcr.io/cirruslabs/macos-ventura-xcode:15
+
+build_task:
+  name: Build credential bundle
+  install_script:
+    - brew install ldid
+  build_script:
+    - make
+  bundle_artifacts:
+    path: "build/bundle/*"
