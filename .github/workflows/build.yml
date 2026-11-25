@@ -11,11 +11,6 @@ on:
 permissions:
   contents: read
 
-# 显式禁止自动取消（防止 push 触发的排队 run 被 GitHub 判为冗余而取消）
-concurrency:
-  group: credential-build-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   build:
     # macOS 构建机自带完整 Xcode（iphoneos SDK）
