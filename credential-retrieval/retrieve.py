@@ -6,7 +6,6 @@ import argparse
 import os
 import plistlib
 import re
-import select
 import shlex
 import subprocess
 import sys
